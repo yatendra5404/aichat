@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Chat by Yatendra</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: #f9f9f9; /* Light modern background */
+      color: #333;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      padding: 20px;
+    }
+
+    .chat-container {
+      width: 100%;
+      max-width: 400px;
+      height: 600px;
+      background: #ffffff; /* White card */
+      border-radius: 15px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-header {
+      background: linear-gradient(90deg, #6a11cb, #2575fc);
+      color: white;
+      text-align: center;
+      padding: 15px;
+      font-size: 1.5em;
+      font-weight: bold;
+    }
+
+    .chat-box {
+      flex: 1;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-y: auto;
+      gap: 10px;
+      position: relative;
+    }
+
+    .placeholder-text {
+      font-size: 1.5rem;
+      font-weight: bold;
+      text-align: center;
+      color: #333;
+      background: linear-gradient(90deg, #ff7eb3, #6a11cb, #2575fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: typing 4s steps(18, end), blink 0.5s step-end infinite;
+      white-space: nowrap;
+      overflow: hidden;
+      display: inline-block;
+      border-right: 2px solid rgba(0, 0, 0, 0.3);
+      max-width: 100%; /* Adjust for responsive design */
+    }
+
+    @keyframes typing {
+      from {
+        width: 0;
+      }
+      to {
+        width: 100%;
+      }
+    }
+
+    @keyframes blink {
+      from, to {
+        border-color: transparent;
+      }
+      50% {
+        border-color: rgba(0, 0, 0, 0.3);
+      }
+    }
+
+    .chat-input {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #ddd;
+      background: #fafafa;
+    }
+
+    .chat-input input {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      outline: none;
+      border-radius: 25px;
+      background: #f1f1f1;
+      font-size: 1em;
+      color: #333;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .chat-input .send-btn {
+      background: #6a11cb;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      padding: 12px;
+      margin-left: 10px;
+      cursor: pointer;
+      font-size: 1.2em;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .chat-input .send-btn:hover {
+      background: #2575fc;
+    }
+
+    .message {
+      max-width: 70%;
+      padding: 10px;
+      border-radius: 15px;
+      font-size: 0.9em;
+    }
+
+    .message.user {
+      align-self: flex-end;
+      background: #6a11cb;
+      color: white;
+    }
+
+    .message.bot {
+      align-self: flex-start;
+      background: #f1f1f1;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <header class="chat-header">AI Chat by Yatendra</header>
+    <div id="chat-box" class="chat-box">
+      <div id="placeholder-text" class="placeholder-text">
+        AI Chat by Yatendra
+      </div>
+    </div>
+    <div class="chat-input">
+      <input id="user-input" type="text" placeholder="Type your message..." />
+      <button id="send-btn" class="send-btn">➤</button>
+    </div>
+  </div>
+
+  <script>
+    const chatBox = document.getElementById("chat-box");
+    const userInput = document.getElementById("user-input");
+    const sendBtn = document.getElementById("send-btn");
+    const placeholderText = document.getElementById("placeholder-text");
+
+    const API_KEY = "AIzaSyC21tXh_EZK_KQQJM6wHoi4jiFwwUeDGtw";
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+
+    function appendMessage(text, sender) {
+      const message = document.createElement("div");
+      message.className = `message ${sender}`;
+      message.innerText = text;
+      chatBox.appendChild(message);
+
+      // Hide placeholder text
+      if (placeholderText) placeholderText.style.display = "none";
+
+      // Scroll to the bottom
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const userMessage = userInput.value.trim();
+      if (!userMessage) return;
+
+      // Display user message
+      appendMessage(userMessage, "user");
+
+      // Detect if the message asks about the maker
+      if (userMessage.toLowerCase().includes("who create you") || userMessage.toLowerCase().includes("who made") || userMessage.toLowerCase().includes("maker")) {
+        appendMessage("Yatendra Singh Gurjar made me.", "bot");
+        userInput.value = "";
+        return;
+      }
+
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [{ text: userMessage }],
+              },
+            ],
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP Error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("API Response:", data); // Debugging: Log the response
+
+        // Parse bot reply
+        const botReply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't understand that.";
+        appendMessage(botReply, "bot");
+      } catch (error) {
+        console.error("Error:", error);
+        appendMessage("Error: Unable to connect to the server or invalid response.", "bot");
+      }
+
+      userInput.value = "";
+    }
+
+    sendBtn.addEventListener("click", sendMessage);
+
+    userInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        sendMessage();
+      }
+    });
+  </script>
+</body>
+</html>
